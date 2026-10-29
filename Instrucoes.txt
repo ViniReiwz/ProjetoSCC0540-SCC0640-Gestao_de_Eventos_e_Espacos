@@ -1,0 +1,33 @@
+Nomes dos integrantes: 
+- João (MER e Relacional)
+- Gustavo (MER e Relacional)
+- Vini (Banco de Dados)
+- Suellen (Banco de Dados)
+- Carlos (Python e Integração)
+- Miguel Lima (Python e Integração)
+
+Requisitos de software: 
+- PostgreSQL
+- Python 3.11 ou superior
+- Ollama instalado localmente
+
+Instruções para criação da base: 
+1. Conecte-se ao PostgreSQL.
+2. Crie um banco de dados chamado "eventos".
+3. Copie o conteúdo da seção "3. DDL COMPLETO" do arquivo Projeto.txt e execute no banco para criar as tabelas e triggers.
+
+Instruções para execução do DML: 
+1. Após criar as tabelas, abra o arquivo DML.sql.
+2. Execute todos os comandos INSERT contidos nele no banco de dados "eventos" para popular as tabelas.
+
+Instruções para execução do protótipo: 
+1. Edite o arquivo Prototipo/config.json com as suas credenciais do PostgreSQL.
+2. Abra o terminal e navegue até a pasta Prototipo (ex: cd Prototipo).
+3. Instale as dependências executando: python -m pip install -r requirements.txt
+4. Inicie o sistema executando: python main.py
+
+Modelo utilizado no Ollama: 
+qwen3:8b
+
+Eventuais limitações ou funcionalidades não concluídas: 
+- (A preencher na entrega final, caso o grupo não consiga implementar alguma funcionalidade ou trigger).

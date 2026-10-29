@@ -1,0 +1,57 @@
+=========================================================
+SCC0640 PROJETO DE BASES DE DADOS
+=========================================================
+GRUPO: [Nome do Grupo]
+INTEGRANTES: João, Gustavo, Vini, Suellen, Carlos, Miguel
+LINGUAGEM UTILIZADA: Python
+MODELO UTILIZADO NO OLLAMA: qwen3:8b
+
+=========================================================
+1. DESCRICAO FINAL DO SISTEMA
+=========================================================
+[Descreva brevemente o sistema efetivamente implementado.]
+
+=========================================================
+2. DECISOES DE PROJETO
+=========================================================
+Q1: [resposta]
+Q2: [resposta]
+Q3: [resposta]
+Q4: [resposta]
+Q5: [resposta]
+Q6: [resposta]
+
+=========================================================
+3. DDL COMPLETO
+=========================================================
+CREATE TABLE Teste_Evento (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL
+);
+
+=========================================================
+4. CONSULTAS
+=========================================================
+CONSULTA 1
+OBJETIVO: Testar a consulta de eventos fictícios.
+SQL: SELECT * FROM Teste_Evento;
+
+CONSULTA 2
+OBJETIVO: [uma frase]
+SQL: [consulta]
+
+CONSULTA 3
+OBJETIVO: [uma frase]
+SQL: [consulta]
+
+CONSULTA 4
+OBJETIVO: [uma frase]
+SQL: [consulta]
+
+CONSULTA 5
+OBJETIVO: [uma frase]
+SQL: [consulta]
+
+=========================================================
+FIM DO ARQUIVO
+=========================================================

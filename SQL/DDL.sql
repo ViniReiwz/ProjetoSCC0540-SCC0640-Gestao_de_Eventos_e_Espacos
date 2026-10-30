@@ -19,6 +19,16 @@ CREATE TABLE ESPACOS(
     Endereço TEXT NOT NULL
 );
 
+CREATE TABLE ESPACO_FERRAMENTA(
+    EspacoID INTEGER,
+    Ferramenta espaco_ferramentas,
+
+    CONSTRAINT esp_ferr_fk PRIMARY KEY (EspacoID, Ferramenta),
+
+    CONSTRAINT esp_ferr_esp_fk FOREIGN KEY (EspacoID) REFERENCES ESPACOS(EspacoID)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TYPE ativ_modalidade AS ENUM(
     'On-line',
     'Presencial'
@@ -30,13 +40,13 @@ CREATE TABLE ATIVIDADES(
     EspacoID INTEGER,
     Modalidade ativ_modalidade NOT NULL,
 
-    ADD CONSTRAINT EventoID FOREIGN KEY REFERENCES EVENTOS(EventoID)
+    CONSTRAINT atv_evnt_fk FOREIGN KEY (EventoID) REFERENCES EVENTOS(EventoID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
 
-    ADD CONSTRAINT EspacoID FOREIGN KEY REFERENCES ESPACOS(EspacoID)
+    CONSTRAINT atv_esp_fk FOREIGN KEY (EspacoID) REFERENCES ESPACOS(EspacoID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
     
-    ADD CONSTRAINT ativ_need_espaco CHECK(Modalidade = 'Presencial' AND EspacoID IS NOT NULL)
+    CONSTRAINT ativ_need_espaco CHECK(Modalidade = 'On-line' OR EspacoID IS NOT NULL)
 );
 
 CREATE TABLE SESSOES(
@@ -45,18 +55,42 @@ CREATE TABLE SESSOES(
     DataOcorre DATE NOT NULL,
     HorarioInicio TIME NOT NULL,
     HorarioFim TIME NOT NULL,
-    Vagas INTEGER
+    Vagas INTEGER,
 
     -- TODO: Criar o trigger pra relacionar Vagas e a capacidade do Espaco onde a atividade irá ocorrer.
+    CONSTRAINT sess_atv_fk FOREIGN KEY (AtividadeID) REFERENCES ATIVIDADES(AtividadeID),
+
+    CONSTRAINT sess_hoorario CHECK(HorarioFim > HorarioInicio)
 );
 
 CREATE TYPE pessoa_sexo AS ENUM(
-    'Masculino', 'Feminino'
+    'Masculino',
+    'Feminino'
 );
 
 CREATE TABLE PESSOAS(
-    CPF INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    CPF VARCHAR(11) PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     NomePessoa VARCHAR(50) NOT NULL,
     Idade INTEGER NOT NULL,
     Sexo pessoa_sexo
+);
+
+CREATE TYPE participacao_tipo AS ENUM(
+    'Organização',
+    'Participante',
+    'Apresentador'
+);
+
+CREATE TABLE PARTICIPACOES(
+    CPF VARCHAR(11),
+    SessaoID INTEGER,
+    Participacao participacao_tipo NOT NULL,
+
+    CONSTRAINT part_cpf_sess_pk PRIMARY KEY (CPF, SessaoID),
+
+    CONSTRAINT part_cpf_fk FOREIGN KEY (CPF) REFERENCES PESSOAS(CPF),
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    
+    CONSTRAINT part_sess_fk FOREIGN KEY (SessaoID) REFERENCES SESSOES(SessaoID)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );

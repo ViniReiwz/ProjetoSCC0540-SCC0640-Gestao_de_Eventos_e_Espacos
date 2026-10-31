@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import psycopg
+from psycopg import Error as PsycopgError
 from ollama import Client
 
 # ==========================================
@@ -68,22 +69,19 @@ def executar_consultas_fixas():
     print("\n" + "="*40)
     print("EXECUÇÃO DAS 5 CONSULTAS DO PROJETO")
     print("="*40)
-
-    # Dividindo o bloco de consultas em partes
+    
     consultas_split = bloco_consultas.split("CONSULTA ")
     cursor = conn.cursor()
-
-    # Itera sobre cada consulta extraída
+    
     for c in consultas_split[1:]:
-        num = "Desconhecido"
+        num = "Desconhecido" # Resolve o aviso de unbound
         try:
             linhas = c.strip().split('\n')
             if not linhas:
                 continue
                 
             num = linhas[0].strip()
-
-            # Extraindo objetivo e SQL
+            
             objetivo = next((linha.split("OBJETIVO:", 1)[1].strip() for linha in linhas if "OBJETIVO:" in linha), "Não definido")
             sql_query = next((linha.split("SQL:", 1)[1].strip() for linha in linhas if "SQL:" in linha), None)
             
@@ -99,11 +97,22 @@ def executar_consultas_fixas():
                 resultados = cursor.fetchall()
                 
                 print("\nResultados:")
-                if resultados: # Verifica com segurança se não é vazio ou None
+                if resultados and cursor.description: 
+                    # Captura o nome das colunas
+                    colunas = [desc[0] for desc in cursor.description]
+                    
+                    # Cria um cabeçalho simples
+                    header = " | ".join(colunas)
+                    print(header)
+                    print("-" * len(header))
+                    
+                    # Imprime cada linha formatada
                     for row in resultados:
-                        print(row)
+                        # Converte tudo para string para evitar erros ao juntar
+                        linha_formatada = " | ".join(str(item) for item in row)
+                        print(linha_formatada)
                 else:
-                    print("(Nenhum registro encontrado)")
+                    print("(Nenhum registro encontrado ou consulta sem retorno)")
             else:
                 print(f"\n[Aviso] SQL da Consulta {num} não encontrado.")
                 
@@ -123,13 +132,17 @@ def consultar_com_ia():
     print("Processando (Ollama)...")
     
     # Prompt de sistema ensinando o modelo a retornar apenas SQL
-    prompt_completo = f"""Você é um tradutor de texto para SQL para um banco PostgreSQL.
+    prompt_completo = f"""Você é um especialista em PostgreSQL.
 O banco possui tabelas que foram criadas com o seguinte DDL:
 {ddl}
 
 A pergunta do usuário é: {pergunta}
 
-Responda APENAS com o código SQL (SELECT). Não inclua explicações, formatação markdown (como ```sql) ou qualquer outro texto.
+Regras rigorosas:
+1. Responda APENAS com o código SQL (SELECT). Não inclua explicações ou formatação markdown (como ```sql).
+2. Utilize exclusivamente os nomes das tabelas e colunas fornecidos no DDL.
+3. Se o usuário perguntar sobre vagas ou eventos físicos, utilize JOINs apropriados (ex: relacione SESSOES com ATIVIDADES, e ATIVIDADES com EVENTOS ou ESPACOS).
+4. É ESTRITAMENTE PROIBIDO gerar comandos de modificação (INSERT, UPDATE, DELETE). Apenas SELECT.
 """
 
     try:
@@ -148,13 +161,11 @@ Responda APENAS com o código SQL (SELECT). Não inclua explicações, formataç
         print("\n--- Consulta SQL Gerada ---")
         print(sql_gerado)
         print("---------------------------")
-
-        # Executa a consulta gerada
+        
         cursor = conn.cursor()
         cursor.execute(sql_gerado)
         resultados = cursor.fetchall()
-
-        # Exibe os resultados de forma organizada
+        
         print("\nResultados:")
         if resultados and cursor.description: # Checa se tem resultado e colunas
             colunas = [desc[0] for desc in cursor.description]
@@ -166,8 +177,15 @@ Responda APENAS com o código SQL (SELECT). Não inclua explicações, formataç
             print("(Nenhum registro encontrado)")
                 
         cursor.close()
+    except PsycopgError as e:
+        # Captura erros do PostgreSQL (sintaxe, colunas inexistentes) e evita o crash
+        print("\n[Erro] A IA gerou uma consulta SQL inválida para o banco atual.")
+        print(f"Detalhes do erro no PostgreSQL: {e}")
+        if 'cursor' in locals() and cursor: cursor.close()
     except Exception as e:
-        print(f"\n[Erro na execução IA]: {e}")
+        # Captura erros gerais de Python
+        print(f"\n[Erro inesperado na execução IA]: {e}")
+        if 'cursor' in locals() and cursor: cursor.close()
         
     input("\nPressione Enter para voltar ao menu...")
 
@@ -181,3 +199,22 @@ def menu():
         print("0. Sair")
         
         opcao = input("\nEscolha uma opção: ")
+        
+        if opcao == '0':
+            print("Encerrando o sistema...")
+            break
+        elif opcao == '1':
+            executar_consultas_fixas()
+        elif opcao == '2':
+            consultar_com_ia()
+        else:
+            print("Opção inválida.")
+
+if __name__ == "__main__":
+    if conn:
+        print(f"✓ Conectado ao banco '{db['dbname']}' no host {db['host']}")
+        print(f"✓ Ollama pronto (Modelo: {ollama_config['model']})")
+        menu()
+        conn.close()
+    else:
+        print("\n[Falha Crítica] Não é possível iniciar o menu sem conexão com o banco.")

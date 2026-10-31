@@ -87,16 +87,15 @@ CREATE TYPE participacao_tipo AS ENUM(
     'Apresentador'
 );
 
-CREATE TABLE PARTICIPACOES(
+CREATE TABLE PARTICIPANTE(
     CPF VARCHAR(11),
-    SessaoID INTEGER,
-    Participacao participacao_tipo NOT NULL,
+    EventoID INTEGER,
 
-    CONSTRAINT part_cpf_sess_pk PRIMARY KEY (CPF, SessaoID),
+    CONSTRAINT part_cpf_evnt_pk PRIMARY KEY (CPF, EventoID),
 
     CONSTRAINT part_cpf_fk FOREIGN KEY (CPF) REFERENCES PESSOAS(CPF),
         ON DELETE CASCADE ON UPDATE CASCADE,
     
-    CONSTRAINT part_sess_fk FOREIGN KEY (SessaoID) REFERENCES SESSOES(SessaoID)
+    CONSTRAINT part_evnt_fk FOREIGN KEY (EventoID) REFERENCES EVENTOS(EventoID)
         ON DELETE CASCADE ON UPDATE CASCADE
 );

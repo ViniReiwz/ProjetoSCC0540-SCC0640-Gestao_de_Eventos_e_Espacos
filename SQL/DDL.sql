@@ -79,12 +79,6 @@ CREATE TABLE ORGANIZACOES(
     CNPJ VARCHAR(14) PRIMARY KEY,
     RazaoSocial VARCHAR(50) NOT NULL,
     Endereco TEXT NOT NULL
-)
-
-CREATE TYPE participacao_tipo AS ENUM(
-    'Organização',
-    'Participante',
-    'Apresentador'
 );
 
 CREATE TABLE PARTICIPANTE(
@@ -99,3 +93,24 @@ CREATE TABLE PARTICIPANTE(
     CONSTRAINT part_evnt_fk FOREIGN KEY (EventoID) REFERENCES EVENTOS(EventoID)
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+CREATE TYPE participante_funcao AS ENUM(
+    'Organização',
+    'Participante',
+    'Apresentador'
+);
+
+CREATE TABLE INSCRICAO(
+    CPF VARCHAR(11),
+    SessaoID INTEGER,
+    Funcao participante_funcao NOT NULL,
+    DataInscricao DATE NOT NULL,
+
+    CONSTRAINT inscricao_pk PRIMARY KEY (CPF, SessaoID),
+
+    CONSTRAINT inscricao_cpf_fk FOREIGN KEY (CPF) REFERENCES PESSOAS(CPF)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    
+    CONSTRAINT inscricao_sess_fk FOREIGN KEY (SessaoID) REFERENCES SESSOES(SessaoID)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+)

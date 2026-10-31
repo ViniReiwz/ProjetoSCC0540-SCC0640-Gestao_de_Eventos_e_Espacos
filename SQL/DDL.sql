@@ -74,7 +74,6 @@ CREATE TABLE ESPACOS(
             HorarioFim TIME NOT NULL,
             Vagas INTEGER,
 
-            -- TODO: Criar o trigger pra relacionar Vagas e a capacidade do Espaco onde a atividade irá ocorrer.
             CONSTRAINT sess_atv_fk FOREIGN KEY (AtividadeID) REFERENCES ATIVIDADES(AtividadeID),
 
             CONSTRAINT sess_hoorario CHECK(HorarioFim > HorarioInicio)
@@ -164,5 +163,24 @@ CREATE TABLE PROMOTORES(
             CONSTRAINT org_tel_cnpj_fk FOREIGN KEY (CNPJ) REFERENCES ORGANIZACOES(CNPJ)
                 ON DELETE CASCADE ON UPDATE CASCADE,
         );
+
+-- =============================================================================================
+
+-- Criação das funções =========================================================================
+
+    -- TODO ->> Criar as funções necessárias para os triggers
+
+-- =============================================================================================
+
+-- Criação dos triggers =========================================================================
+
+    -- TODO ->> Criar trigger para setar o limite de vagas para cada sessão
+        -- Se não for especificado na inserção da sessão, pega a capacidade do espaço em que ocorrerá (se não for especificado [atividade on-line] é NULL)
+    
+    -- TODO ->> Criar trigger que verifica, numa inserção/atualização em inscrição se a pessa referenciada é participante do evento
+
+    -- TODO ->> Criar trigger que verifica se é possível haver inscrições novas pra uma sessão (N° de vagas > n de inscritos)
+
+    -- TODO ->> Pensar e criar um 4° trigger que sejá útil pra algo
 
 -- =============================================================================================

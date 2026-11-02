@@ -25,3 +25,13 @@ DROP TYPE IF EXISTS pessoa_sexo;
 DROP TYPE IF EXISTS participante_funcao;
 
 -- =============================================================================================
+
+-- Remove as funções criadas, caso existam =====================================================
+
+DROP FUNCTION IF EXISTS set_limite_vagas();
+DROP FUNCTION IF EXISTS verifica_participante_evento();
+DROP FUNCTION IF EXISTS verifica_limite_vagas();
+DROP FUNCTION IF EXISTS verifica_ferramentas();
+DROP FUNCTION IF EXISTS verifica_precisa_espaco();
+
+-- =============================================================================================

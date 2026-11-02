@@ -53,7 +53,7 @@ CREATE TABLE ESPACOS(
 
     CREATE TABLE ATIVIDADES(
         AtividadeID INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-        EspacoID INTEGER,
+        EventoID INTEGER,
         Modalidade ativ_modalidade NOT NULL,
 
         CONSTRAINT atv_evnt_fk FOREIGN KEY (EventoID) REFERENCES EVENTOS(EventoID)
@@ -147,7 +147,7 @@ CREATE TABLE PROMOTORES(
 
                 CONSTRAINT inscricoes_pk PRIMARY KEY (CPF, SessaoID),
 
-                CONSTRAINT inscricoes_cpf_fk FOREIGN KEY (CPF) REFERENCES PARTICIPANTES(CPF)
+                CONSTRAINT inscricoes_cpf_fk FOREIGN KEY (CPF) REFERENCES PESSOAS(CPF)
                     ON DELETE CASCADE ON UPDATE CASCADE,
                 
                 CONSTRAINT inscricoes_sess_fk FOREIGN KEY (SessaoID) REFERENCES SESSOES(SessaoID)

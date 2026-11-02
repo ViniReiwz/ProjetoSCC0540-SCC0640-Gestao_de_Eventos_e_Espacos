@@ -128,7 +128,7 @@ def executar_consultas_fixas():
 # Tarefa 1: regras do prompt
 # ------------------------------------------
 
-# Dicas de JOIN para o modelo, conforme SQL/DDL.sql do repositório (01/11).
+# Dicas de JOIN para o modelo, conforme SQL/DDL.sql do repositório (commit c3d327f, 02/11).
 # ATUALIZAR sempre que o DDL mudar.
 DICAS_JOIN = """- Os nomes no DDL não têm aspas: escreva tabelas e colunas SEM aspas duplas (ex.: SELECT NomeEvento FROM EVENTOS).
 - EVENTO é a iniciativa inteira (congresso, semana acadêmica, feira): nome em EVENTOS.NomeEvento
@@ -149,7 +149,11 @@ RESPOSTA_IMPOSSIVEL = "IMPOSSIVEL"
 
 
 def compactar_ddl(texto):
-    """Tira comentários e linhas em branco do DDL: prompt menor = resposta mais rápida"""
+    """Deixa só tipos e tabelas, sem comentários: prompt menor = resposta mais rápida"""
+    # Funções e triggers não ajudam a gerar SELECT; corta a partir do primeiro deles
+    corte = re.search(r"CREATE\s+(OR\s+REPLACE\s+)?(FUNCTION|TRIGGER|PROCEDURE)", texto, flags=re.IGNORECASE)
+    if corte:
+        texto = texto[:corte.start()]
     texto = re.sub(r"--[^\n]*", "", texto)   # comentários SQL
     texto = re.sub(r"^\s*=+\s*$", "", texto, flags=re.MULTILINE)  # linhas ===== do template
     linhas = [linha.strip() for linha in texto.splitlines() if linha.strip()]

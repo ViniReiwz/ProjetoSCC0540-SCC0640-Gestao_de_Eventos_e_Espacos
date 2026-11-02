@@ -121,7 +121,7 @@ CREATE TABLE PROMOTORES(
             CONSTRAINT pessoa_tel_pk PRIMARY KEY (CPF, Telefone),
 
             CONSTRAINT pessoa_tel_cpf_fk FOREIGN KEY (CPF) REFERENCES PESSOAS(CPF)
-                ON DELETE CASCADE ON UPDATE CASCADE,
+                ON DELETE CASCADE ON UPDATE CASCADE
         );
 
         CREATE TABLE PARTICIPANTES(
@@ -236,7 +236,7 @@ CREATE TABLE PROMOTORES(
             IF NEW.EspacoID IS NULL THEN
                 RETURN NEW;
             END IF;
-            
+
             FOR ferramenta_necessaria IN
                 SELECT FerramentaNecessaria FROM ATIVIDADE_FERRAMENTA WHERE AtividadeID = NEW.AtividadeID
             LOOP

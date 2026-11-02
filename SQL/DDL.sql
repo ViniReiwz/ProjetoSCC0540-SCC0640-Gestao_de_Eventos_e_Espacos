@@ -206,7 +206,7 @@ CREATE TABLE PROMOTORES(
                 RAISE EXCEPTION 'A pessoa com CPF % não é participante do evento da sessão %', NEW.CPF, NEW.SessaoID;
             END IF;
 
-            RETURN OLD;
+            RETURN NEW;
         END;
         $$ LANGUAGE plpgsql;
 

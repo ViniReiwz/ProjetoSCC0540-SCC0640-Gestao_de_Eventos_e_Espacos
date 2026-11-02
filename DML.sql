@@ -2233,6 +2233,6 @@ INSERT INTO INSCRICOES (CPF, SessaoID, Funcao, DataInscricao) VALUES
 -- 1) Inscrever alguém que não participa do evento da sessão 1:
 -- INSERT INTO INSCRICOES (CPF, SessaoID, Funcao, DataInscricao) VALUES ('00000000000', 1, 'Participante', CURRENT_DATE);
 -- 2) Sessão presencial sem espaço (atividade presencial qualquer, ex.: use um AtividadeID presencial):
--- INSERT INTO SESSOES (EspacoID, AtividadeID, DataOcorre, HorarioInicio, HorarioFim) VALUES (NULL, 1, '2026-03-10', '08:00', '09:00');
+-- INSERT INTO SESSOES (EspacoID, AtividadeID, DataOcorre, HorarioInicio, HorarioFim) VALUES (NULL, 4, '2026-03-10', '08:00', '09:00');
 -- 3) Espaço sem a ferramenta exigida (Sala de Convivência, id 11, não tem nenhuma ferramenta):
 --    use uma atividade com ferramentas em ATIVIDADE_FERRAMENTA, ex.: SELECT AtividadeID FROM ATIVIDADE_FERRAMENTA LIMIT 1;

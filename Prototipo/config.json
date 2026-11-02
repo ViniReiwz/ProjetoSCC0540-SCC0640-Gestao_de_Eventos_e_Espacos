@@ -1,10 +1,10 @@
 {
   "database": {
     "host": "localhost",
-    "port": 5432,
-    "dbname": "eventos",
-    "user": "postgres",
-    "password": "postgres"
+    "port": 54578,
+    "dbname": "projeto",
+    "user": "vini_reis",
+    "password": "Vi202901!"
   },
   "ollama": {
     "host": "http://localhost:11434",

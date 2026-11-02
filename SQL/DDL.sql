@@ -1,6 +1,6 @@
 -- Criação dos tipos auxiliares ================================================================
 
-CREATE TYPE espaco_ferramentas AS ENUM(
+CREATE TYPE ferramentas AS ENUM(
     'Projetor',
     'Suporte à Transmissão',
     'Equipamento de Som',
@@ -43,7 +43,7 @@ CREATE TABLE ESPACOS(
 
     CREATE TABLE ESPACO_FERRAMENTA(
         EspacoID INTEGER,
-        Ferramenta espaco_ferramentas,
+        Ferramenta ferramentas,
 
         CONSTRAINT esp_ferr_fk PRIMARY KEY (EspacoID, Ferramenta),
 
@@ -61,6 +61,16 @@ CREATE TABLE ESPACOS(
         
         CONSTRAINT ativ_need_espaco CHECK(Modalidade = 'On-line' OR EspacoID IS NOT NULL)
     );
+
+        CREATE TABLE ATIVIDADE_FERRAMENTA(
+            AtividadeID INTEGER,
+            FerramentaNecessaria ferramentas,
+
+            CONSTRAINT atv_ferr_pk PRIMARY KEY (AtividadeID, FerramentaNecessaria),
+
+            CONSTRAINT atv_ferr_atv_fk FOREIGN KEY (AtividadeID) REFERENCES ATIVIDADES(AtividadeID)
+                ON DELETE CASCADE ON UPDATE CASCADE
+        );
 
         CREATE TABLE SESSOES(
             SessaoID INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,

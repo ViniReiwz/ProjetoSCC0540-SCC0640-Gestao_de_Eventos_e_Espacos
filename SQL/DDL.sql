@@ -163,7 +163,7 @@ CREATE TABLE PROMOTORES(
     );
 
         CREATE TABLE ORGANIZACAO_TELEFONE(
-            CNPJ VARCHAR(11),
+            CNPJ VARCHAR(14),
             Telefone VARCHAR(11),
 
             CONSTRAINT org_tel_pk PRIMARY KEY (CNPJ, Telefone),

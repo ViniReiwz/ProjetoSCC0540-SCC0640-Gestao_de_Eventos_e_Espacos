@@ -53,21 +53,18 @@ CREATE TABLE ESPACOS(
 
     CREATE TABLE ATIVIDADES(
         AtividadeID INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-        EventoID INTEGER NOT NULL,
         EspacoID INTEGER,
         Modalidade ativ_modalidade NOT NULL,
 
         CONSTRAINT atv_evnt_fk FOREIGN KEY (EventoID) REFERENCES EVENTOS(EventoID)
             ON DELETE CASCADE ON UPDATE CASCADE,
-
-        CONSTRAINT atv_esp_fk FOREIGN KEY (EspacoID) REFERENCES ESPACOS(EspacoID)
-            ON DELETE RESTRICT ON UPDATE CASCADE,
         
         CONSTRAINT ativ_need_espaco CHECK(Modalidade = 'On-line' OR EspacoID IS NOT NULL)
     );
 
         CREATE TABLE SESSOES(
             SessaoID INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+            EspacoID INTEGER,
             AtividadeID INTEGER NOT NULL,
             DataOcorre DATE NOT NULL,
             HorarioInicio TIME NOT NULL,
@@ -75,6 +72,9 @@ CREATE TABLE ESPACOS(
             Vagas INTEGER,
 
             CONSTRAINT sess_atv_fk FOREIGN KEY (AtividadeID) REFERENCES ATIVIDADES(AtividadeID),
+
+            CONSTRAINT sess_esp_fk FOREIGN KEY (EspacoID) REFERENCES ESPACOS(EspacoID)
+                ON DELETE RESTRICT ON UPDATE CASCADE,
 
             CONSTRAINT sess_hoorario CHECK(HorarioFim > HorarioInicio)
         );

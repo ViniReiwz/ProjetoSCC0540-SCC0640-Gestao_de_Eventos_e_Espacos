@@ -18,7 +18,7 @@ DROP TABLE IF EXISTS ESPACOS;
 
 -- Remove os tipos criados, caso existam =======================================================
 
-DROP TYPE IF EXISTS espaco_ferramentas;
+DROP TYPE IF EXISTS ferramentas;
 DROP TYPE IF EXISTS ativ_modalidade;
 DROP TYPE IF EXISTS pessoa_sexo;
 DROP TYPE IF EXISTS participante_funcao;

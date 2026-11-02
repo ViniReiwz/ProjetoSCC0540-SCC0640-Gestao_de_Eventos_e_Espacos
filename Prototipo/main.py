@@ -1,7 +1,9 @@
 import json
+import re
 from pathlib import Path
 import psycopg
 from psycopg import Error as PsycopgError
+import ollama
 from ollama import Client
 
 # ==========================================
@@ -122,71 +124,150 @@ def executar_consultas_fixas():
     cursor.close()
     input("\nPressione Enter para voltar ao menu...")
 
+# ------------------------------------------
+# Tarefa 1: regras do prompt
+# ------------------------------------------
+
+# Dicas de JOIN para o modelo, conforme SQL/DDL.sql do repositório (01/11).
+# ATUALIZAR sempre que o DDL mudar.
+DICAS_JOIN = """- Os nomes no DDL não têm aspas: escreva tabelas e colunas SEM aspas duplas (ex.: SELECT NomeEvento FROM EVENTOS).
+- atividade pertence a um evento: ATIVIDADES.EventoID = EVENTOS.EventoID
+- sessão é uma realização de uma atividade: SESSOES.AtividadeID = ATIVIDADES.AtividadeID
+- local, sala ou capacidade de uma SESSÃO: SESSOES.EspacoID = ESPACOS.EspacoID
+- ferramentas de um espaço: ESPACO_FERRAMENTA.EspacoID = ESPACOS.EspacoID
+- ferramentas que uma atividade precisa: ATIVIDADE_FERRAMENTA.AtividadeID = ATIVIDADES.AtividadeID
+- quem está inscrito em um EVENTO: PARTICIPANTES (CPF, EventoID), junto com PESSOAS por CPF
+- quem está inscrito em uma SESSÃO e com qual função: INSCRICOES (CPF, SessaoID, Funcao), junto com PESSOAS por CPF
+- quem promove um evento: PROMOVE (PromotorID, EventoID); o promotor é uma pessoa (PESSOAS.PromotorID) ou uma organização (ORGANIZACOES.PromotorID)
+- telefones: PESSOA_TELEFONE por CPF, ORGANIZACAO_TELEFONE por CNPJ"""
+
+RESPOSTA_IMPOSSIVEL = "IMPOSSIVEL"
+
+
+def montar_prompt(pergunta):
+    """Monta o prompt: papel, esquema, regras, dicas de JOIN e a pergunta"""
+    return f"""Você é um tradutor de perguntas em português para SQL do PostgreSQL.
+
+ESQUEMA DO BANCO (DDL):
+{ddl}
+
+REGRAS OBRIGATÓRIAS:
+1. Gere UM único comando SELECT (pode começar com WITH). Nunca gere INSERT, UPDATE, DELETE, DROP, ALTER, CREATE ou TRUNCATE.
+2. Use somente tabelas e colunas que existem no esquema acima. Não invente nomes.
+3. Responda apenas com o SQL, sem explicações, sem comentários e sem markdown (nada de ```).
+4. Se a pergunta não puder ser respondida com esse esquema, responda exatamente: {RESPOSTA_IMPOSSIVEL}
+
+COMO AS TABELAS SE LIGAM:
+{DICAS_JOIN}
+
+PERGUNTA: {pergunta}
+/no_think"""
+
+
+# ------------------------------------------
+# Tarefa 2: limpeza, validação e erros
+# ------------------------------------------
+
+class SQLRecusado(Exception):
+    """SQL gerado pela IA que não passa na validação"""
+
+
+def limpar_resposta(texto):
+    """Remove o raciocínio do qwen3 e o markdown que o modelo insiste em mandar"""
+    texto = re.sub(r"<think>.*?</think>", "", texto, flags=re.DOTALL)
+    texto = re.sub(r"```(?:sql)?", "", texto, flags=re.IGNORECASE)
+    return texto.strip()
+
+
+def validar_sql(sql):
+    """Aceita apenas um único comando de leitura; senão levanta SQLRecusado"""
+    if not sql:
+        raise SQLRecusado("o modelo não devolveu nenhum SQL.")
+    if sql.upper().startswith(RESPOSTA_IMPOSSIVEL):
+        raise SQLRecusado("a pergunta não pode ser respondida com o esquema do banco.")
+
+    sql = sql.rstrip().rstrip(";").strip()
+    if ";" in sql:
+        raise SQLRecusado("a resposta tem mais de um comando SQL.")
+
+    primeira_palavra = sql.split(None, 1)[0].upper()
+    if primeira_palavra not in ("SELECT", "WITH"):
+        raise SQLRecusado(f"só consultas SELECT são permitidas (recebido: {primeira_palavra}).")
+    return sql
+
+
 def consultar_com_ia():
     """Converte pergunta natural em SQL usando Ollama e executa"""
     if not conn:
         print("\n[Erro] Sem conexão com o banco de dados.")
         return
 
-    pergunta = input("\nFaça sua pergunta sobre os eventos: ")
+    pergunta = input("\nFaça sua pergunta sobre os eventos: ").strip()
+    if not pergunta:
+        print("\n[Aviso] Pergunta vazia.")
+        return
     print("Processando (Ollama)...")
-    
-    # Prompt de sistema ensinando o modelo a retornar apenas SQL
-    prompt_completo = f"""Você é um especialista em PostgreSQL.
-O banco possui tabelas que foram criadas com o seguinte DDL:
-{ddl}
 
-A pergunta do usuário é: {pergunta}
-
-Regras rigorosas:
-1. Responda APENAS com o código SQL (SELECT). Não inclua explicações ou formatação markdown (como ```sql).
-2. Utilize exclusivamente os nomes das tabelas e colunas fornecidos no DDL.
-3. Se o usuário perguntar sobre vagas ou eventos físicos, utilize JOINs apropriados (ex: relacione SESSOES com ATIVIDADES, e ATIVIDADES com EVENTOS ou ESPACOS).
-4. É ESTRITAMENTE PROIBIDO gerar comandos de modificação (INSERT, UPDATE, DELETE). Apenas SELECT.
-"""
-
+    # Etapa 1: pedir o SQL ao modelo
     try:
         response = client.chat(
             model=ollama_config["model"],
-            messages=[{"role": "user", "content": prompt_completo}]
+            messages=[{"role": "user", "content": montar_prompt(pergunta)}]
         )
-        sql_gerado = response["message"]["content"].strip()
-        
-        # Limpa caso o modelo insista em mandar markdown
-        if sql_gerado.startswith("```sql"): sql_gerado = sql_gerado[6:]
-        if sql_gerado.startswith("```"): sql_gerado = sql_gerado[3:]
-        if sql_gerado.endswith("```"): sql_gerado = sql_gerado[:-3]
-        sql_gerado = sql_gerado.strip()
-        
-        print("\n--- Consulta SQL Gerada ---")
-        print(sql_gerado)
-        print("---------------------------")
-        
-        cursor = conn.cursor()
-        cursor.execute(sql_gerado)
-        resultados = cursor.fetchall()
-        
+        resposta = response["message"]["content"]
+    except ollama.ResponseError as e:
+        # Ollama respondeu com erro (ex.: modelo não baixado)
+        print(f"\n[Erro no Ollama]: {e.error}")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+    except ConnectionError:
+        print(f"\n[Erro] Não foi possível falar com o Ollama em {ollama_config['host']}. Ele está rodando?")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+
+    # Etapa 2: limpar e validar antes de tocar no banco
+    try:
+        sql_gerado = validar_sql(limpar_resposta(resposta))
+    except SQLRecusado as e:
+        print(f"\n[Consulta recusada]: {e}")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+
+    print("\n--- Consulta SQL Gerada ---")
+    print(sql_gerado)
+    print("---------------------------")
+
+    # Etapa 3: executar numa transação somente leitura
+    try:
+        with conn.transaction():
+            with conn.cursor() as cursor:
+                # Garantia real: o próprio PostgreSQL recusa qualquer escrita
+                cursor.execute("SET TRANSACTION READ ONLY")
+                # Evita travar o menu com uma consulta pesada demais
+                cursor.execute("SET LOCAL statement_timeout = '15s'")
+                cursor.execute(sql_gerado)  # type: ignore
+                resultados = cursor.fetchall()
+                colunas = [desc[0] for desc in cursor.description] if cursor.description else []
+
+        # Exibe os resultados de forma organizada
         print("\nResultados:")
-        if resultados and cursor.description: # Checa se tem resultado e colunas
-            colunas = [desc[0] for desc in cursor.description]
+        if resultados:
             print(" | ".join(colunas))
             print("-" * (len(colunas) * 15))
             for row in resultados:
                 print(row)
         else:
             print("(Nenhum registro encontrado)")
-                
-        cursor.close()
-    except PsycopgError as e:
-        # Captura erros do PostgreSQL (sintaxe, colunas inexistentes) e evita o crash
-        print("\n[Erro] A IA gerou uma consulta SQL inválida para o banco atual.")
-        print(f"Detalhes do erro no PostgreSQL: {e}")
-        if 'cursor' in locals() and cursor: cursor.close()
+    except psycopg.Error as e:
+        # Coluna/tabela inventada, erro de sintaxe, tentativa de escrita, timeout...
+        # A saída do "with conn.transaction()" já desfez a transação.
+        erro = e.diag.message_primary or str(e)
+        print(f"\n[Erro no SQL gerado]: {erro}")
+        print("Tente reformular a pergunta.")
     except Exception as e:
-        # Captura erros gerais de Python
-        print(f"\n[Erro inesperado na execução IA]: {e}")
-        if 'cursor' in locals() and cursor: cursor.close()
-        
+        # Último recurso: nada pode derrubar o menu
+        print(f"\n[Erro inesperado]: {e}")
+
     input("\nPressione Enter para voltar ao menu...")
 
 def menu():

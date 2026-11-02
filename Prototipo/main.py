@@ -131,6 +131,10 @@ def executar_consultas_fixas():
 # Dicas de JOIN para o modelo, conforme SQL/DDL.sql do repositório (01/11).
 # ATUALIZAR sempre que o DDL mudar.
 DICAS_JOIN = """- Os nomes no DDL não têm aspas: escreva tabelas e colunas SEM aspas duplas (ex.: SELECT NomeEvento FROM EVENTOS).
+- EVENTO é a iniciativa inteira (congresso, semana acadêmica, feira): nome em EVENTOS.NomeEvento
+- ATIVIDADE é o que acontece dentro do evento (workshop, palestra, minicurso, live, mesa-redonda): nome em ATIVIDADES.NomeAtividade.
+  Se a pergunta citar um workshop, palestra, minicurso etc., filtre por ATIVIDADES.NomeAtividade, NÃO por EVENTOS.NomeEvento
+- para comparar nomes digitados pelo usuário, use ILIKE com % (ex.: NomeAtividade ILIKE '%workshop de postgresql%')
 - atividade pertence a um evento: ATIVIDADES.EventoID = EVENTOS.EventoID
 - sessão é uma realização de uma atividade: SESSOES.AtividadeID = ATIVIDADES.AtividadeID
 - local, sala ou capacidade de uma SESSÃO: SESSOES.EspacoID = ESPACOS.EspacoID
@@ -144,18 +148,30 @@ DICAS_JOIN = """- Os nomes no DDL não têm aspas: escreva tabelas e colunas SEM
 RESPOSTA_IMPOSSIVEL = "IMPOSSIVEL"
 
 
+def compactar_ddl(texto):
+    """Tira comentários e linhas em branco do DDL: prompt menor = resposta mais rápida"""
+    texto = re.sub(r"--[^\n]*", "", texto)   # comentários SQL
+    texto = re.sub(r"^\s*=+\s*$", "", texto, flags=re.MULTILINE)  # linhas ===== do template
+    linhas = [linha.strip() for linha in texto.splitlines() if linha.strip()]
+    return "\n".join(linhas)
+
+
+DDL_COMPACTO = compactar_ddl(ddl)
+
+
 def montar_prompt(pergunta):
     """Monta o prompt: papel, esquema, regras, dicas de JOIN e a pergunta"""
     return f"""Você é um tradutor de perguntas em português para SQL do PostgreSQL.
 
 ESQUEMA DO BANCO (DDL):
-{ddl}
+{DDL_COMPACTO}
 
 REGRAS OBRIGATÓRIAS:
 1. Gere UM único comando SELECT (pode começar com WITH). Nunca gere INSERT, UPDATE, DELETE, DROP, ALTER, CREATE ou TRUNCATE.
 2. Use somente tabelas e colunas que existem no esquema acima. Não invente nomes.
 3. Responda apenas com o SQL, sem explicações, sem comentários e sem markdown (nada de ```).
-4. Se a pergunta não puder ser respondida com esse esquema, responda exatamente: {RESPOSTA_IMPOSSIVEL}
+4. Mostre colunas legíveis para uma pessoa (NomeEspaco, NomePessoa, NomeEvento, NomeAtividade, RazaoSocial...) em vez de só IDs: faça JOIN com a tabela que tem o nome.
+5. Se a pergunta não puder ser respondida com esse esquema, responda exatamente: {RESPOSTA_IMPOSSIVEL}
 
 COMO AS TABELAS SE LIGAM:
 {DICAS_JOIN}
@@ -212,7 +228,9 @@ def consultar_com_ia():
     try:
         response = client.chat(
             model=ollama_config["model"],
-            messages=[{"role": "user", "content": montar_prompt(pergunta)}]
+            messages=[{"role": "user", "content": montar_prompt(pergunta)}],
+            think=False,                   # desliga o raciocínio longo do qwen3
+            options={"num_predict": 400}   # limite de tokens na resposta: nunca gera para sempre
         )
         resposta = response["message"]["content"]
     except ollama.ResponseError as e:
@@ -252,10 +270,12 @@ def consultar_com_ia():
         # Exibe os resultados de forma organizada
         print("\nResultados:")
         if resultados:
-            print(" | ".join(colunas))
-            print("-" * (len(colunas) * 15))
+            # Mesmo formato de tabela das consultas fixas
+            header = " | ".join(colunas)
+            print(header)
+            print("-" * len(header))
             for row in resultados:
-                print(row)
+                print(" | ".join(str(item) for item in row))
         else:
             print("(Nenhum registro encontrado)")
     except psycopg.Error as e:

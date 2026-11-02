@@ -55,6 +55,8 @@ CREATE TABLE ESPACOS(
 
     CREATE TABLE ATIVIDADES(
         AtividadeID INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        NomeAtividade VARCHAR(100) NOT NULL,
+        Descricao TEXT,
         EventoID INTEGER,
         Modalidade ativ_modalidade NOT NULL,
 

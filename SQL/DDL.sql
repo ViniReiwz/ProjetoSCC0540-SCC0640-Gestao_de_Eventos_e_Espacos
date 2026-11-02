@@ -250,6 +250,21 @@ CREATE TABLE PROMOTORES(
             RETURN NEW;
         END;
         $$ LANGUAGE plpgsql;
+    
+    CREATE OR REPLACE FUNCTION verifica_precisa_espaco()
+        RETURNS TRIGGER AS $$
+        DECLARE modalidade_atividade ativ_modalidade;
+        BEGIN
+
+            SELECT Modalidade INTO modalidade_atividade FROM ATIVIDADES WHERE AtividadeID = NEW.AtividadeID;
+
+            IF modalidade_atividade = 'Presencial' AND NEW.EspacoID IS NULL THEN
+                RAISE EXCEPTION 'A atividade presencial % precisa de um espaço definido', NEW.AtividadeID;
+            END IF;
+
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;    
 
 -- =============================================================================================
 
@@ -266,5 +281,8 @@ CREATE TABLE PROMOTORES(
 
     CREATE TRIGGER verifica_ferramentas_trigger BEFORE INSERT OR UPDATE ON SESSOES
         FOR EACH ROW EXECUTE FUNCTION verifica_ferramentas();
+
+    CREATE TRIGGER verifica_precisa_espaco_trigger BEFORE INSERT OR UPDATE ON SESSOES
+        FOR EACH ROW EXECUTE FUNCTION verifica_precisa_espaco();
 
 -- =============================================================================================

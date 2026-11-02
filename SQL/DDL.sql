@@ -85,7 +85,7 @@ CREATE TABLE ESPACOS(
             CONSTRAINT sess_esp_fk FOREIGN KEY (EspacoID) REFERENCES ESPACOS(EspacoID)
                 ON DELETE RESTRICT ON UPDATE CASCADE,
 
-            CONSTRAINT sess_hoorario CHECK(HorarioFim > HorarioInicio)
+            CONSTRAINT sess_horario CHECK(HorarioFim > HorarioInicio)
         );
 
 CREATE TABLE PROMOTORES(

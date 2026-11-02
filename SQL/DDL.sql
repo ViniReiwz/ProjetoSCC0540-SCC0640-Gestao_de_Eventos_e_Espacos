@@ -58,8 +58,6 @@ CREATE TABLE ESPACOS(
 
         CONSTRAINT atv_evnt_fk FOREIGN KEY (EventoID) REFERENCES EVENTOS(EventoID)
             ON DELETE CASCADE ON UPDATE CASCADE,
-        
-        CONSTRAINT ativ_need_espaco CHECK(Modalidade = 'On-line' OR EspacoID IS NOT NULL)
     );
 
         CREATE TABLE ATIVIDADE_FERRAMENTA(
@@ -230,9 +228,32 @@ CREATE TABLE PROMOTORES(
         END;
         $$ LANGUAGE plpgsql;
 
+    CREATE OR REPLACE FUNCTION verifica_ferramentas()
+        RETURNS TRIGGER AS $$
+        DECLARE ferramenta_necessaria ferramentas;
+        BEGIN
+
+            IF NEW.EspacoID IS NULL THEN
+                RETURN NEW;
+            END IF;
+            
+            FOR ferramenta_necessaria IN
+                SELECT FerramentaNecessaria FROM ATIVIDADE_FERRAMENTA WHERE AtividadeID = NEW.AtividadeID
+            LOOP
+                IF NOT EXISTS(
+                    SELECT 1 FROM ESPACO_FERRAMENTA WHERE EspacoID = NEW.EspacoID AND Ferramenta = ferramenta_necessaria
+                ) THEN
+                    RAISE EXCEPTION 'O espaço % não possui a ferramenta necessária % para a atividade %', NEW.EspacoID, ferramenta_necessaria, NEW.AtividadeID;
+                END IF;
+            END LOOP;
+
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+
 -- =============================================================================================
 
--- Criação dos triggers =========================================================================
+-- Criação dos triggers ========================================================================
 
     CREATE TRIGGER set_limite_vagas_trigger BEFORE INSERT OR UPDATE ON SESSOES
         FOR EACH ROW EXECUTE FUNCTION set_limite_vagas();
@@ -243,6 +264,7 @@ CREATE TABLE PROMOTORES(
     CREATE TRIGGER verifica_limite_vagas_trigger BEFORE INSERT ON INSCRICOES
         FOR EACH ROW EXECUTE FUNCTION verifica_limite_vagas();
 
-    -- TODO ->> Pensar e criar um 4° trigger que sejá útil pra algo
+    CREATE TRIGGER verifica_ferramentas_trigger BEFORE INSERT OR UPDATE ON SESSOES
+        FOR EACH ROW EXECUTE FUNCTION verifica_ferramentas();
 
 -- =============================================================================================

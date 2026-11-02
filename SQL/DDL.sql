@@ -79,7 +79,7 @@ CREATE TABLE ESPACOS(
             HorarioFim TIME NOT NULL,
             Vagas INTEGER,
 
-            CONSTRAINT sess_atv_fk FOREIGN KEY (AtividadeID) REFERENCES ATIVIDADES(AtividadeID),
+            CONSTRAINT sess_atv_fk FOREIGN KEY (AtividadeID) REFERENCES ATIVIDADES(AtividadeID)
                 ON DELETE CASCADE ON UPDATE CASCADE,
 
             CONSTRAINT sess_esp_fk FOREIGN KEY (EspacoID) REFERENCES ESPACOS(EspacoID)
@@ -131,7 +131,7 @@ CREATE TABLE PROMOTORES(
 
             CONSTRAINT part_cpf_evnt_pk PRIMARY KEY (CPF, EventoID),
 
-            CONSTRAINT part_cpf_fk FOREIGN KEY (CPF) REFERENCES PESSOAS(CPF),
+            CONSTRAINT part_cpf_fk FOREIGN KEY (CPF) REFERENCES PESSOAS(CPF)
                 ON DELETE CASCADE ON UPDATE CASCADE,
             
             CONSTRAINT part_evnt_fk FOREIGN KEY (EventoID) REFERENCES EVENTOS(EventoID)
@@ -170,7 +170,7 @@ CREATE TABLE PROMOTORES(
             CONSTRAINT org_tel_pk PRIMARY KEY (CNPJ, Telefone),
 
             CONSTRAINT org_tel_cnpj_fk FOREIGN KEY (CNPJ) REFERENCES ORGANIZACOES(CNPJ)
-                ON DELETE CASCADE ON UPDATE CASCADE,
+                ON DELETE CASCADE ON UPDATE CASCADE
         );
 
 -- =============================================================================================

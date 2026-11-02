@@ -178,18 +178,70 @@ CREATE TABLE PROMOTORES(
 
 -- Criação das funções =========================================================================
 
-    -- TODO ->> Criar as funções necessárias para os triggers
+    CREATE OR REPLACE FUNCTION set_limite_vagas()
+        RETURNS TRIGGER AS $$
+        DECLARE limite_vagas INTEGER;
+        BEGIN
+
+            IF NEW.Vagas IS NULL THEN
+                SELECT Capacidade INTO limite_vagas FROM ESPACOS WHERE EspacoID = NEW.EspacoID;
+                NEW.Vagas := limite_vagas;
+            END IF;
+
+            RETURN NEW;
+        END;
+        $$  LANGUAGE plpgsql;
+
+    CREATE OR REPLACE FUNCTION verifica_participante_evento()
+        RETURNS TRIGGER AS $$
+        DECLARE evento_id INTEGER;
+        BEGIN
+
+            SELECT A.EventoID INTO evento_id FROM SESSOES S
+                JOIN ATIVIDADES A ON S.AtividadeID = A.AtividadeID
+                WHERE S.SessaoID = NEW.SessaoID;
+
+            IF NOT EXISTS(
+                SELECT 1 FROM PARTICIPANTES WHERE CPF = NEW.CPF AND EventoID = evento_id
+            ) THEN
+                RAISE EXCEPTION 'A pessoa com CPF % não é participante do evento da sessão %', NEW.CPF, NEW.SessaoID;
+            END IF;
+
+            RETURN OLD;
+        END;
+        $$ LANGUAGE plpgsql;
+
+    CREATE OR REPLACE FUNCTION verifica_limite_vagas()
+        RETURNS TRIGGER AS $$
+        DECLARE 
+            vagas_ocupadas INTEGER;
+            limite_vagas INTEGER;
+        BEGIN
+
+            SELECT COUNT(*) INTO vagas_ocupadas FROM INSCRICOES WHERE SessaoID = NEW.SessaoID;
+
+            SELECT Vagas INTO limite_vagas FROM SESSOES WHERE SessaoID = NEW.SessaoID;
+            
+            IF vagas_ocupadas >= limite_vagas THEN
+                RAISE EXCEPTION 'Não é possível realizar a inscrição. Limite de vagas atingido para a sessão %', NEW.SessaoID;
+            END IF;
+
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
 
 -- =============================================================================================
 
 -- Criação dos triggers =========================================================================
 
-    -- TODO ->> Criar trigger para setar o limite de vagas para cada sessão
-        -- Se não for especificado na inserção da sessão, pega a capacidade do espaço em que ocorrerá (se não for especificado [atividade on-line] é NULL)
+    CREATE TRIGGER set_limite_vagas_trigger BEFORE INSERT OR UPDATE ON SESSOES
+        FOR EACH ROW EXECUTE FUNCTION set_limite_vagas();
     
-    -- TODO ->> Criar trigger que verifica, numa inserção/atualização em inscrição se a pessa referenciada é participante do evento
+    CREATE TRIGGER verifica_participante_evento_trigger BEFORE INSERT OR UPDATE ON INSCRICOES
+        FOR EACH ROW EXECUTE FUNCTION verifica_participante_evento();
 
-    -- TODO ->> Criar trigger que verifica se é possível haver inscrições novas pra uma sessão (N° de vagas > n de inscritos)
+    CREATE TRIGGER verifica_limite_vagas_trigger BEFORE INSERT ON INSCRICOES
+        FOR EACH ROW EXECUTE FUNCTION verifica_limite_vagas();
 
     -- TODO ->> Pensar e criar um 4° trigger que sejá útil pra algo
 

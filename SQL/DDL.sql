@@ -80,6 +80,7 @@ CREATE TABLE ESPACOS(
             Vagas INTEGER,
 
             CONSTRAINT sess_atv_fk FOREIGN KEY (AtividadeID) REFERENCES ATIVIDADES(AtividadeID),
+                ON DELETE CASCADE ON UPDATE CASCADE,
 
             CONSTRAINT sess_esp_fk FOREIGN KEY (EspacoID) REFERENCES ESPACOS(EspacoID)
                 ON DELETE RESTRICT ON UPDATE CASCADE,

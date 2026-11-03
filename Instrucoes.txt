@@ -1,7 +1,7 @@
 Nomes dos integrantes: 
 - João (MER e Relacional)
 - Gustavo (MER e Relacional)
-- Vini (Banco de Dados)
+- Vinicius (Banco de Dados)
 - Suellen (Banco de Dados)
 - Carlos (Python e Integração)
 - Miguel Lima (Python e Integração)

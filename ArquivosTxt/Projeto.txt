@@ -169,13 +169,14 @@ CREATE TABLE PROMOTORES(
 
             CREATE TABLE INSCRICOES(
                 CPF VARCHAR(11),
+                EventoID INTEGER NOT NULL,
                 SessaoID INTEGER,
                 Funcao participante_funcao NOT NULL,
                 DataInscricao DATE NOT NULL,
 
                 CONSTRAINT inscricoes_pk PRIMARY KEY (CPF, SessaoID),
 
-                CONSTRAINT inscricoes_cpf_fk FOREIGN KEY (CPF) REFERENCES PESSOAS(CPF)
+                CONSTRAINT inscricoes_cpf_fk FOREIGN KEY (CPF, EventoID) REFERENCES PARTICIPANTES(CPF, EventoID)
                     ON DELETE CASCADE ON UPDATE CASCADE,
                 
                 CONSTRAINT inscricoes_sess_fk FOREIGN KEY (SessaoID) REFERENCES SESSOES(SessaoID)
@@ -225,9 +226,7 @@ CREATE TABLE PROMOTORES(
                 JOIN ATIVIDADES A ON S.AtividadeID = A.AtividadeID
                 WHERE S.SessaoID = NEW.SessaoID;
 
-            IF NOT EXISTS(
-                SELECT 1 FROM PARTICIPANTES WHERE CPF = NEW.CPF AND EventoID = evento_id
-            ) THEN
+            IF(NEW.EventoID != evento_id) THEN
                 RAISE EXCEPTION 'A pessoa com CPF % não é participante do evento da sessão %', NEW.CPF, NEW.SessaoID;
             END IF;
 

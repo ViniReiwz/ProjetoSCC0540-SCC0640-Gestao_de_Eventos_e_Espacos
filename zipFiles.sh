@@ -11,8 +11,10 @@ zip -r Prototipo.zip ProjetoBD/;
 # Cria os diretórios e compacta tudo de acordo com a estrutura indicada para o envio final (arquivo 01)
 
 mkdir Aux/ &&
-cp ./Modelagem/MER_Projeto.drawio.pdf ./Aux/ER.pdf && 
-cp ./Modelagem/Relacional_ProjetoBD.pdf ./Aux/Relacional.pdf &&
+cp ./Modelagem/ER.pdf ./Aux/ && 
+cp ./Modelagem/ER.xml ./Aux/ && 
+cp ./Modelagem/Relacional.pdf ./Aux/ &&
+cp ./Modelagem/Relacional.mmd ./Aux/ &&
 cp ./ArquivosTxt/Projeto.txt ./Aux/ && 
 cp ./ArquivosTxt/Instrucoes.txt ./Aux/ && 
 cp ./SQL/DML.sql ./Aux/ &&

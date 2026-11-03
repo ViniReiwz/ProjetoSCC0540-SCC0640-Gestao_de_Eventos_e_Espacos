@@ -221,7 +221,7 @@ CREATE TABLE PROMOTORES(
             limite_vagas INTEGER;
         BEGIN
 
-            SELECT COUNT(*) INTO vagas_ocupadas FROM INSCRICOES WHERE SessaoID = NEW.SessaoID;
+            SELECT COUNT(*) INTO vagas_ocupadas FROM INSCRICOES WHERE SessaoID = NEW.SessaoID AND Funcao = 'Participante';
 
             SELECT Vagas INTO limite_vagas FROM SESSOES WHERE SessaoID = NEW.SessaoID;
             

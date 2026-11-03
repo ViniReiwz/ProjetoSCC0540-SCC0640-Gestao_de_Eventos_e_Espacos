@@ -1,0 +1,185 @@
+erDiagram
+
+    %% ".." = FK fora da PK | "--" = FK que faz parte da PK
+
+    EVENTOS ||..o{ ATIVIDADES : possui
+
+    ATIVIDADES ||..|{ SESSOES : apresenta
+
+    ESPACOS |o..o{ SESSOES : realizada
+
+    PROMOTORES |o..o| PESSOAS : e
+
+    PROMOTORES |o..o| ORGANIZACOES : e
+
+    PROMOTORES ||--o{ PROMOVE : promove
+
+    EVENTOS ||--o{ PROMOVE : e_promovido
+
+    PESSOAS ||--o{ PARTICIPANTES : participa
+
+    EVENTOS ||--o{ PARTICIPANTES : recebe
+
+    %% FK composta (CPF, EventoID) para PARTICIPANTES
+
+    PARTICIPANTES ||--o{ INSCRICOES : inscreve
+
+    SESSOES ||--o{ INSCRICOES : recebe
+
+    PESSOAS ||--|{ PESSOA_TELEFONE : possui
+
+    ORGANIZACOES ||--|{ ORGANIZACAO_TELEFONE : possui
+
+    ESPACOS ||--o{ ESPACO_FERRAMENTA : possui
+
+    ATIVIDADES ||--o{ ATIVIDADE_FERRAMENTA : requer
+
+    EVENTOS {
+
+        int EventoID PK
+
+        varchar(100) NomeEvento
+
+        date DataInicio
+
+        date DataFim
+
+    }
+
+    ATIVIDADES {
+
+        int AtividadeID PK
+
+        int EventoID FK
+
+        varchar(100) NomeAtividade
+
+        text Descricao
+
+        ativ_modalidade Modalidade
+
+    }
+
+    ATIVIDADE_FERRAMENTA {
+
+        int AtividadeID PK, FK
+
+        ferramentas FerramentaNecessaria PK
+
+    }
+
+    ESPACOS {
+
+        int EspacoID PK
+
+        varchar(50) NomeEspaco
+
+        int Capacidade
+
+        text Endereco
+
+    }
+
+    ESPACO_FERRAMENTA {
+
+        int EspacoID PK, FK
+
+        ferramentas Ferramenta PK
+
+    }
+
+    SESSOES {
+
+        int SessaoID PK
+
+        int AtividadeID FK
+
+        int EspacoID FK
+
+        date DataOcorre
+
+        time HorarioInicio
+
+        time HorarioFim
+
+        int Vagas
+
+    }
+
+    PROMOTORES {
+
+        int PromotorID PK
+
+    }
+
+    PROMOVE {
+
+        int PromotorID PK, FK
+
+        int EventoID PK, FK
+
+    }
+
+    PESSOAS {
+
+        varchar(11) CPF PK
+
+        varchar(50) NomePessoa
+
+        date DataNasc
+
+        pessoa_sexo Sexo
+
+        int PromotorID FK, UK
+
+    }
+
+    PESSOA_TELEFONE {
+
+        varchar(11) CPF PK, FK
+
+        varchar(11) Telefone PK
+
+    }
+
+    ORGANIZACOES {
+
+        varchar(14) CNPJ PK
+
+        varchar(50) RazaoSocial
+
+        text Endereco
+
+        int PromotorID FK, UK
+
+    }
+
+    ORGANIZACAO_TELEFONE {
+
+        varchar(14) CNPJ PK, FK
+
+        varchar(11) Telefone PK
+
+    }
+
+    PARTICIPANTES {
+
+        varchar(11) CPF PK, FK
+
+        int EventoID PK, FK
+
+    }
+
+    INSCRICOES {
+
+        varchar(11) CPF PK, FK
+
+        int EventoID FK
+
+        int SessaoID PK, FK
+
+        participante_funcao Funcao
+
+        date DataInscricao
+
+    }

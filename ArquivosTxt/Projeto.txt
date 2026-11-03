@@ -2,7 +2,7 @@
 SCC0640 PROJETO DE BASES DE DADOS
 =========================================================
 GRUPO: Gerenciador de Eventos Simples
-INTEGRANTES: João Bartsch, Gustavo Arruda, Vinicius Reis, Suellen Teodorico, Carlos Zecchi, Miguel Lima
+INTEGRANTES: João Vitor Bartsch Morasi, Gustavo Silvério Arruda, Vinicius Reis Gonçalves, Suellen Teodorico dos Santos Silva, Carlos Eduardo da Silva Zecchi, Miguel Lima
 LINGUAGEM UTILIZADA: Python
 MODELO UTILIZADO NO OLLAMA: qwen3:8b
 

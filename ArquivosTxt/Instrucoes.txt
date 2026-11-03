@@ -1,10 +1,10 @@
 Nomes dos integrantes: 
-- João (MER e Relacional)
-- Gustavo (MER e Relacional)
-- Vinicius (Banco de Dados)
-- Suellen (Banco de Dados)
-- Carlos (Python e Integração)
-- Miguel Lima (Python e Integração)
+- João Vitor Bartsch Morasi
+- Gustavo Silvério Arruda
+- Vinicius Reis Gonçalves
+- Suellen Teodorico dos Santos Silva
+- Carlos Eduardo da Silva Zecchi
+- Miguel Lima
 
 Requisitos de software: 
 - PostgreSQL

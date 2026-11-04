@@ -72,20 +72,28 @@ def executar_consultas_fixas():
     print("EXECUÇÃO DAS 5 CONSULTAS DO PROJETO")
     print("="*40)
     
-    consultas_split = bloco_consultas.split("CONSULTA ")
+    # Cada consulta começa numa linha "CONSULTA N" (só no início da linha,
+    # para não confundir com a palavra dentro de um SQL)
+    consultas_split = re.split(r"^\s*CONSULTA\s+", bloco_consultas, flags=re.MULTILINE)
     cursor = conn.cursor()
     
     for c in consultas_split[1:]:
         num = "Desconhecido" # Resolve o aviso de unbound
         try:
-            linhas = c.strip().split('\n')
-            if not linhas:
+            # Tira as linhas "=====" do template antes de interpretar o bloco
+            c = re.sub(r"^\s*=+\s*$", "", c, flags=re.MULTILINE).strip()
+            if not c:
                 continue
                 
-            num = linhas[0].strip()
+            num = c.split("\n", 1)[0].strip()
             
-            objetivo = next((linha.split("OBJETIVO:", 1)[1].strip() for linha in linhas if "OBJETIVO:" in linha), "Não definido")
-            sql_query = next((linha.split("SQL:", 1)[1].strip() for linha in linhas if "SQL:" in linha), None)
+            # OBJETIVO: tudo entre "OBJETIVO:" e "SQL:" (pode ocupar mais de uma linha)
+            m_obj = re.search(r"OBJETIVO:(.*?)(?=^\s*SQL:|\Z)", c, flags=re.DOTALL | re.MULTILINE)
+            objetivo = " ".join(m_obj.group(1).split()) if m_obj else "Não definido"
+
+            # SQL: tudo depois de "SQL:" até o fim do bloco, em uma ou várias linhas
+            m_sql = re.search(r"^\s*SQL:(.*)", c, flags=re.DOTALL | re.MULTILINE)
+            sql_query = m_sql.group(1).strip() if m_sql else None
             
             if sql_query:
                 print(f"\n--- CONSULTA {num} ---")
@@ -128,7 +136,7 @@ def executar_consultas_fixas():
 # Tarefa 1: regras do prompt
 # ------------------------------------------
 
-# Dicas de JOIN para o modelo, conforme SQL/DDL.sql do repositório (commit c3d327f, 02/11).
+# Dicas de JOIN para o modelo, conforme SQL/DDL.sql do repositório (commit 5644558, 03/11).
 # ATUALIZAR sempre que o DDL mudar.
 DICAS_JOIN = """- Os nomes no DDL não têm aspas: escreva tabelas e colunas SEM aspas duplas (ex.: SELECT NomeEvento FROM EVENTOS).
 - EVENTO é a iniciativa inteira (congresso, semana acadêmica, feira): nome em EVENTOS.NomeEvento
@@ -141,7 +149,7 @@ DICAS_JOIN = """- Os nomes no DDL não têm aspas: escreva tabelas e colunas SEM
 - ferramentas de um espaço: ESPACO_FERRAMENTA.EspacoID = ESPACOS.EspacoID
 - ferramentas que uma atividade precisa: ATIVIDADE_FERRAMENTA.AtividadeID = ATIVIDADES.AtividadeID
 - quem está inscrito em um EVENTO: PARTICIPANTES (CPF, EventoID), junto com PESSOAS por CPF
-- quem está inscrito em uma SESSÃO e com qual função: INSCRICOES (CPF, SessaoID, Funcao), junto com PESSOAS por CPF
+- quem está inscrito em uma SESSÃO e com qual função: INSCRICOES (CPF, EventoID, SessaoID, Funcao), junto com PESSOAS por CPF
 - quem promove um evento: PROMOVE (PromotorID, EventoID); o promotor é uma pessoa (PESSOAS.PromotorID) ou uma organização (ORGANIZACOES.PromotorID)
 - telefones: PESSOA_TELEFONE por CPF, ORGANIZACAO_TELEFONE por CNPJ"""
 
